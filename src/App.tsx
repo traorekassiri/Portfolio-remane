@@ -437,15 +437,41 @@ const Hero = () => {
       const opt = {
         margin:       [10, 10, 10, 10] as [number, number, number, number],
         filename:     'Mouniratou_GUIRA_Portfolio.pdf',
-        image:        { type: 'jpeg' as const, quality: 0.98 },
+        image:        { type: 'jpeg' as const, quality: 0.95 },
         html2canvas:  { 
-          scale: 2, 
+          scale: 1.5, // Échelle réduite pour plus de stabilité
           useCORS: true, 
           logging: false,
           letterRendering: true,
-          allowTaint: true,
           scrollY: 0,
+          windowWidth: 1200, // Force un layout desktop propre
           onclone: (clonedDoc: Document) => {
+            // Nettoyage profond du clone pour html2canvas
+            const all = clonedDoc.getElementsByTagName('*');
+            for (let i = 0; i < all.length; i++) {
+              const el = all[i] as HTMLElement;
+              const style = window.getComputedStyle(el);
+              
+              // Correction des couleurs oklch pour html2canvas
+              if (style.color.includes('oklch')) el.style.color = '#111827';
+              if (style.backgroundColor.includes('oklch')) {
+                if (el.classList.contains('bg-turquoise')) el.style.backgroundColor = '#40E0D0';
+                else if (el.classList.contains('bg-turquoise/10')) el.style.backgroundColor = 'rgba(64, 224, 208, 0.1)';
+                else el.style.backgroundColor = 'transparent';
+              }
+              if (style.borderColor.includes('oklch')) el.style.borderColor = '#e5e7eb';
+              
+              // Désactiver les effets complexes qui font planter le rendu
+              el.style.boxShadow = 'none';
+              el.style.textShadow = 'none';
+              el.style.backdropFilter = 'none';
+              el.style.filter = 'none';
+              el.style.transform = 'none';
+              el.style.transition = 'none';
+              el.style.animation = 'none';
+              el.style.opacity = '1';
+            }
+
             // Forcer l'affichage des sections PDF-only
             const pdfOnly = clonedDoc.querySelectorAll('.pdf-only');
             pdfOnly.forEach(el => {
@@ -457,26 +483,6 @@ const Hero = () => {
             // Supprimer les éléments indésirables (nav, boutons, etc.)
             const toRemove = clonedDoc.querySelectorAll('nav, button, .no-pdf, .no-print');
             toRemove.forEach(el => el.remove());
-
-            // Correction des couleurs oklch pour html2canvas
-            const all = clonedDoc.getElementsByTagName('*');
-            for (let i = 0; i < all.length; i++) {
-              const el = all[i] as HTMLElement;
-              const style = window.getComputedStyle(el);
-              
-              if (style.color.includes('oklch')) el.style.color = '#111827';
-              if (style.backgroundColor.includes('oklch')) {
-                if (el.classList.contains('bg-turquoise')) el.style.backgroundColor = '#40E0D0';
-                else if (el.classList.contains('bg-turquoise/10')) el.style.backgroundColor = 'rgba(64, 224, 208, 0.1)';
-                else el.style.backgroundColor = 'transparent';
-              }
-              if (style.borderColor.includes('oklch')) el.style.borderColor = '#e5e7eb';
-              
-              // Désactiver les animations
-              el.style.transform = 'none';
-              el.style.transition = 'none';
-              el.style.opacity = '1';
-            }
           }
         },
         jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' as const },
@@ -484,12 +490,11 @@ const Hero = () => {
       };
       
       // Attendre un peu pour que le DOM se stabilise avec les classes PDF
-      await new Promise(resolve => setTimeout(resolve, 800));
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
       await html2pdf().from(element).set(opt).save();
     } catch (error) {
       console.error('PDF Generation Error:', error);
-      alert("La génération directe a échoué. Utilisation de l'impression système.");
       window.print();
     } finally {
       document.body.classList.remove('pdf-export-mode');
