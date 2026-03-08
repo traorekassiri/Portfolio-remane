@@ -950,6 +950,98 @@ const FormationItem = ({ children }: any) => (
   </motion.div>
 );
 
+const CertificatesSection = () => {
+  const [selectedCert, setSelectedCert] = useState<string | null>(null);
+  const certificates = [
+    {
+      title: "Attestation de Stage - RTB",
+      image: "https://i.imgur.com/An3J8qL.jpeg",
+      description: "Stage pratique à la Radio Télévision du Burkina (RTB) Bobo-Dioulasso."
+    },
+    {
+      title: "Attestation de Stage - KIBI GROUP",
+      image: "https://i.imgur.com/FEaVBQt.jpeg",
+      description: "Stage au sein de KIBI GROUP, agence de communication."
+    }
+  ];
+
+  return (
+    <section id="certificats" className="section-container my-24">
+      <div className="flex justify-between items-end mb-12">
+        <div>
+          <h2 className="text-3xl md:text-5xl font-bold text-gray-900 mb-4">Certificats & Attestations</h2>
+          <p className="text-gray-600">Preuves de mes engagements et de mes compétences acquises.</p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        {certificates.map((cert, i) => (
+          <motion.div
+            key={i}
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: i * 0.1 }}
+            className="group cursor-pointer"
+            onClick={() => setSelectedCert(cert.image)}
+          >
+            <div className="bg-gray-100 aspect-[4/3] rounded-[2.5rem] overflow-hidden relative border border-gray-100 shadow-sm group-hover:shadow-xl transition-all duration-500">
+              <img 
+                src={cert.image} 
+                alt={cert.title}
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                referrerPolicy="no-referrer"
+              />
+              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-500 flex items-center justify-center">
+                <div className="w-12 h-12 rounded-full bg-white/90 backdrop-blur text-gray-900 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-500 transform translate-y-4 group-hover:translate-y-0">
+                  <ImageIcon size={24} />
+                </div>
+              </div>
+            </div>
+            <div className="mt-6">
+              <h3 className="text-xl font-bold text-gray-900 group-hover:text-turquoise transition-colors">{cert.title}</h3>
+              <p className="text-gray-500 text-sm mt-2">{cert.description}</p>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+
+      <AnimatePresence>
+        {selectedCert && (
+          <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 md:p-12">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setSelectedCert(null)}
+              className="absolute inset-0 bg-gray-900/90 backdrop-blur-md"
+            />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              className="relative z-10 max-w-5xl w-full max-h-full flex items-center justify-center"
+            >
+              <button 
+                onClick={() => setSelectedCert(null)}
+                className="absolute -top-12 right-0 md:-right-12 p-2 text-white hover:text-turquoise transition-colors"
+              >
+                <X size={32} />
+              </button>
+              <img 
+                src={selectedCert} 
+                alt="Certificat" 
+                className="max-w-full max-h-[80vh] object-contain rounded-xl shadow-2xl"
+                referrerPolicy="no-referrer"
+              />
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+    </section>
+  );
+};
+
 const ContactForm = () => {
   const [status, setStatus] = useState<'idle' | 'sending' | 'success'>('idle');
 
@@ -1034,6 +1126,7 @@ const HomePage = () => {
           li: FormationItem
         }}
       />
+      <CertificatesSection />
       <Testimonials />
       <BlogSection />
       <section id="contact" className="section-container">
