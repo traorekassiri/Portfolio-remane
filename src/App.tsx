@@ -8,6 +8,7 @@ import {
   Menu, 
   X, 
   ChevronRight, 
+  ChevronDown,
   Mail, 
   Phone, 
   MapPin, 
@@ -93,8 +94,25 @@ const Navbar = () => {
   const navLinks = [
     { name: 'Accueil', href: '/', icon: User },
     { name: 'Compétences', href: '/competences', icon: Code },
-    { name: 'Mes Projets', href: '/projets', icon: Globe },
+    { 
+      name: 'Mes Projets', 
+      href: '#', 
+      icon: Globe,
+      dropdown: [
+        {
+          label: 'Mes Projets',
+          items: [
+            { name: 'Mes Réalisations', href: '/projets/realisations' },
+            { name: 'Appel à projets (PCTL)', href: '/projets/pctl' },
+            { name: 'Plaquette JCBM 2024', href: '/projets/plaquette-jcbm' },
+            { name: 'Galerie Photos', href: '/projets/galerie' },
+          ]
+        }
+      ]
+    },
   ];
+
+  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
 
   return (
     <nav className={`fixed top-0 left-0 w-full z-[100] transition-all duration-500 ${isOpen ? 'bg-white py-4' : (scrolled || location.pathname !== '/' ? 'bg-white/90 backdrop-blur-md shadow-sm py-4' : 'bg-transparent py-6')}`}>
@@ -106,19 +124,61 @@ const Navbar = () => {
         {/* Desktop Nav */}
         <div className="hidden md:flex items-center space-x-8">
           {navLinks.map((link) => (
-            <Link 
+            <div 
               key={link.name} 
-              to={link.href} 
-              className={`nav-link relative ${location.pathname === link.href ? 'text-turquoise' : 'text-gray-900'}`}
+              className="relative group"
+              onMouseEnter={() => link.dropdown && setActiveDropdown(link.name)}
+              onMouseLeave={() => setActiveDropdown(null)}
             >
-              {link.name}
-              {location.pathname === link.href && (
-                <motion.div 
-                  layoutId="nav-underline"
-                  className="absolute -bottom-1 left-0 w-full h-0.5 bg-turquoise rounded-full"
-                />
+              <Link 
+                to={link.href} 
+                className={`nav-link flex items-center space-x-1 relative ${location.pathname === link.href || (link.dropdown && link.dropdown.some(d => d.items.some(i => location.pathname === i.href))) ? 'text-turquoise' : 'text-gray-900'}`}
+                onClick={(e) => link.href === '#' && e.preventDefault()}
+              >
+                <span>{link.name}</span>
+                {link.dropdown && <ChevronDown size={14} className={`transition-transform duration-300 ${activeDropdown === link.name ? 'rotate-180' : ''}`} />}
+                {(location.pathname === link.href || (link.dropdown && link.dropdown.some(d => d.items.some(i => location.pathname === i.href)))) && (
+                  <motion.div 
+                    layoutId="nav-underline"
+                    className="absolute -bottom-1 left-0 w-full h-0.5 bg-turquoise rounded-full"
+                  />
+                )}
+              </Link>
+
+              {/* Dropdown Menu */}
+              {link.dropdown && (
+                <AnimatePresence>
+                  {activeDropdown === link.name && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                      transition={{ duration: 0.2 }}
+                      className="absolute top-full left-0 mt-2 w-64 bg-white rounded-2xl shadow-xl border border-gray-100 py-4 z-[120]"
+                    >
+                      {link.dropdown.map((section, idx) => (
+                        <div key={idx} className="px-2">
+                          <div className="px-4 py-2 text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
+                            {section.label}
+                          </div>
+                          <div className="space-y-1">
+                            {section.items.map((item) => (
+                              <Link
+                                key={item.name}
+                                to={item.href}
+                                className={`block px-4 py-2 rounded-xl text-sm font-medium transition-all ${location.pathname === item.href ? 'bg-turquoise/10 text-turquoise' : 'text-gray-600 hover:bg-gray-50 hover:text-turquoise'}`}
+                              >
+                                {item.name}
+                              </Link>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               )}
-            </Link>
+            </div>
           ))}
           
           <div className="flex items-center space-x-5 pl-4 border-l border-gray-100">
@@ -169,7 +229,7 @@ const Navbar = () => {
             className="fixed inset-0 bg-white z-[105] md:hidden"
           >
             <div className="flex flex-col h-full pt-32 pb-12 px-8">
-              <div className="flex flex-col space-y-8">
+              <div className="flex flex-col space-y-6">
                 {navLinks.map((link, i) => (
                   <motion.div 
                     key={link.name}
@@ -177,18 +237,56 @@ const Navbar = () => {
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.1 + i * 0.1 }}
                   >
-                    <Link
-                      to={link.href}
-                      className="flex items-center space-x-6 group"
-                      onClick={() => setIsOpen(false)}
-                    >
-                      <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${location.pathname === link.href ? 'bg-turquoise text-white' : 'bg-gray-100 text-gray-400 group-hover:bg-turquoise/10 group-hover:text-turquoise'}`}>
-                        <link.icon size={24} />
-                      </div>
-                      <span className={`text-4xl font-bold tracking-tighter transition-colors ${location.pathname === link.href ? 'text-turquoise' : 'text-gray-900 group-hover:text-turquoise'}`}>
-                        {link.name}
-                      </span>
-                    </Link>
+                    <div className="flex flex-col space-y-4">
+                      <Link
+                        to={link.href}
+                        className="flex items-center space-x-6 group"
+                        onClick={(e) => {
+                          if (link.dropdown) {
+                            e.preventDefault();
+                            setActiveDropdown(activeDropdown === link.name ? null : link.name);
+                          } else {
+                            setIsOpen(false);
+                          }
+                        }}
+                      >
+                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${location.pathname === link.href || (link.dropdown && link.dropdown.some(d => d.items.some(i => location.pathname === i.href))) ? 'bg-turquoise text-white' : 'bg-gray-100 text-gray-400 group-hover:bg-turquoise/10 group-hover:text-turquoise'}`}>
+                          <link.icon size={24} />
+                        </div>
+                        <div className="flex items-center space-x-3">
+                          <span className={`text-4xl font-bold tracking-tighter transition-colors ${location.pathname === link.href || (link.dropdown && link.dropdown.some(d => d.items.some(i => location.pathname === i.href))) ? 'text-turquoise' : 'text-gray-900 group-hover:text-turquoise'}`}>
+                            {link.name}
+                          </span>
+                          {link.dropdown && <ChevronDown size={24} className={`text-gray-300 transition-transform ${activeDropdown === link.name ? 'rotate-180' : ''}`} />}
+                        </div>
+                      </Link>
+
+                      {link.dropdown && activeDropdown === link.name && (
+                        <motion.div 
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          className="pl-18 space-y-4"
+                        >
+                          {link.dropdown.map((section, sIdx) => (
+                            <div key={sIdx} className="space-y-3">
+                              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">{section.label}</p>
+                              <div className="flex flex-col space-y-3">
+                                {section.items.map((item, iIdx) => (
+                                  <Link
+                                    key={iIdx}
+                                    to={item.href}
+                                    onClick={() => setIsOpen(false)}
+                                    className={`text-xl font-bold transition-colors ${location.pathname === item.href ? 'text-turquoise' : 'text-gray-500 hover:text-turquoise'}`}
+                                  >
+                                    {item.name}
+                                  </Link>
+                                ))}
+                              </div>
+                            </div>
+                          ))}
+                        </motion.div>
+                      )}
+                    </div>
                   </motion.div>
                 ))}
               </div>
@@ -290,6 +388,10 @@ const MarkdownSection = ({ title, file, icon: Icon, id, className = "", componen
                   {isButton && <ExternalLink className="ml-2" size={20} />}
                 </a>
               );
+            },
+            p: ({ children, node }: any) => {
+              const hasImage = node.children.some((child: any) => child.type === 'element' && child.tagName === 'img');
+              return hasImage ? <div className="mb-4">{children}</div> : <p className="mb-4">{children}</p>;
             },
             ...components
           }}
@@ -1396,108 +1498,42 @@ const AdminPage = () => {
   );
 };
 
-const ProjectsOverviewPage = () => (
-  <div className="pb-24">
-    <ProjectHero title="Mes" subtitle="Projets" tagline="Portfolio" />
-    <section className="max-w-7xl mx-auto px-6 -mt-12 relative z-10">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ delay: 0.1 }}
-        >
-          <Link 
-            to="/projets/realisations"
-            className="group block bg-white rounded-[2.5rem] p-8 shadow-xl shadow-gray-200/50 hover:shadow-2xl hover:shadow-turquoise/20 transition-all duration-500 border border-gray-100 h-full"
-          >
-            <div className="w-14 h-14 rounded-2xl bg-turquoise/10 text-turquoise flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500">
-              <ClipboardList size={28} />
-            </div>
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Mes Réalisations</h2>
-            <p className="text-xs text-gray-600 leading-relaxed mb-6">
-              Découvrez l'ensemble de mes missions en communication, audiovisuel et relation client.
-            </p>
-            <div className="flex items-center text-turquoise font-bold text-xs">
-              Voir les détails <ChevronRight className="ml-2 group-hover:translate-x-2 transition-transform" size={14} />
-            </div>
-          </Link>
-        </motion.div>
-
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ delay: 0.2 }}
-        >
-          <Link 
-            to="/projets/pctl"
-            className="group block bg-gray-900 rounded-[2.5rem] p-8 shadow-xl hover:shadow-2xl hover:shadow-turquoise/30 transition-all duration-500 h-full"
-          >
-            <div className="w-14 h-14 rounded-2xl bg-turquoise text-white flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500">
-              <FileText size={28} />
-            </div>
-            <h2 className="text-xl font-bold text-white mb-4 leading-tight">
-              Appel à projets (PCTL)
-            </h2>
-            <p className="text-xs text-gray-400 leading-relaxed mb-6">
-              Dossier complet, budget et chronogramme du Programme de Coopération Transfrontalière Locale.
-            </p>
-            <div className="flex items-center text-turquoise font-bold text-xs">
-              Consulter le dossier <ChevronRight className="ml-2 group-hover:translate-x-2 transition-transform" size={14} />
-            </div>
-          </Link>
-        </motion.div>
-
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ delay: 0.3 }}
-        >
-          <Link 
-            to="/projets/plaquette-jcbm"
-            className="group block bg-white rounded-[2.5rem] p-8 shadow-xl shadow-gray-200/50 hover:shadow-2xl hover:shadow-turquoise/20 transition-all duration-500 border border-gray-100 h-full"
-          >
-            <div className="w-14 h-14 rounded-2xl bg-turquoise/10 text-turquoise flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500">
-              <Palette size={28} />
-            </div>
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Plaquette JCBM 2024</h2>
-            <p className="text-xs text-gray-600 leading-relaxed mb-6">
-              Visuels et présentation de la plaquette officielle des Journées Culturelles Bobo Madarè.
-            </p>
-            <div className="flex items-center text-turquoise font-bold text-xs">
-              Voir la plaquette <ChevronRight className="ml-2 group-hover:translate-x-2 transition-transform" size={14} />
-            </div>
-          </Link>
-        </motion.div>
-
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ delay: 0.4 }}
-        >
-          <Link 
-            to="/projets/galerie"
-            className="group block bg-white rounded-[2.5rem] p-8 shadow-xl shadow-gray-200/50 hover:shadow-2xl hover:shadow-turquoise/20 transition-all duration-500 border border-gray-100 h-full"
-          >
-            <div className="w-14 h-14 rounded-2xl bg-turquoise/10 text-turquoise flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500">
-              <ImageIcon size={28} />
-            </div>
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Galerie Photos</h2>
-            <p className="text-xs text-gray-600 leading-relaxed mb-6">
-              Une immersion visuelle dans mes différentes activités et moments marquants.
-            </p>
-            <div className="flex items-center text-turquoise font-bold text-xs">
-              Voir la galerie <ChevronRight className="ml-2 group-hover:translate-x-2 transition-transform" size={14} />
-            </div>
-          </Link>
-        </motion.div>
-      </div>
-    </section>
-  </div>
-);
+const ProjectsOverviewPage = () => {
+  const config = useConfig();
+  return (
+    <div className="pb-24">
+      <ProjectHero title="Mes" subtitle="Projets" tagline="Portfolio" />
+      <section className="max-w-7xl mx-auto px-6 -mt-12 relative z-10">
+        <div className="bg-white rounded-[3rem] p-12 shadow-xl border border-gray-100 text-center">
+          <div className="w-20 h-20 bg-turquoise/10 text-turquoise rounded-3xl flex items-center justify-center mx-auto mb-8">
+            <Globe size={40} />
+          </div>
+          <h2 className="text-3xl font-bold text-gray-900 mb-6">Explorez mes réalisations</h2>
+          <p className="text-gray-600 max-w-2xl mx-auto mb-12 text-lg">
+            Retrouvez l'ensemble de mes projets dans le menu "Mes Projets" ci-dessus.
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 max-w-4xl mx-auto">
+            {[
+              { name: 'Mes Réalisations', href: '/projets/realisations', icon: ClipboardList },
+              { name: 'Appel à projets (PCTL)', href: '/projets/pctl', icon: FileText },
+              { name: 'Plaquette JCBM 2024', href: '/projets/plaquette-jcbm', icon: Palette },
+              { name: 'Galerie Photos', href: '/projets/galerie', icon: ImageIcon },
+            ].map((item) => (
+              <Link 
+                key={item.name}
+                to={item.href}
+                className="flex flex-col items-center p-6 rounded-2xl bg-gray-50 hover:bg-turquoise/5 hover:text-turquoise transition-all group border border-transparent hover:border-turquoise/20"
+              >
+                <item.icon size={24} className="mb-3 text-gray-400 group-hover:text-turquoise transition-colors" />
+                <span className="text-sm font-bold text-center">{item.name}</span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+};
 
 const RealisationsPage = () => (
   <div className="pb-24">
@@ -1570,7 +1606,7 @@ const RealisationsPage = () => (
 
 const PCTLPage = () => (
   <div className="pb-24">
-    <ProjectHero title="Appel à projets" subtitle="PCTL" tagline="Projet Transfrontalier" heroImageUrl="https://i.imgur.com/iHblV07.jpeg" />
+    <ProjectHero title="Appel à projets" subtitle="PCTL" tagline="Projet Transfrontalier" heroImageUrl="https://i.imgur.com/MkyRrEv.jpeg" />
     <div className="max-w-7xl mx-auto px-6 mb-12">
       <Link to="/projets" className="inline-flex items-center text-gray-500 hover:text-turquoise transition-colors font-medium">
         <ChevronRight className="rotate-180 mr-2" size={20} />
@@ -1677,7 +1713,7 @@ const PlaquetteJCBMPage = () => (
 
 const GaleriePage = () => (
   <div className="pb-24">
-    <ProjectHero title="Galerie" subtitle="Photos" tagline="Moments en Images" />
+    <ProjectHero title="Galerie" subtitle="Photos" tagline="Moments en Images" heroImageUrl="https://i.imgur.com/yHkn7Ia.jpeg" />
     <div className="max-w-7xl mx-auto px-6 mb-12">
       <Link to="/projets" className="inline-flex items-center text-gray-500 hover:text-turquoise transition-colors font-medium">
         <ChevronRight className="rotate-180 mr-2" size={20} />
