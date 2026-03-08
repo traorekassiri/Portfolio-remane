@@ -1,0 +1,27 @@
+{
+  "profile": {
+    "name": "Mouniratou GUIRA",
+    "title": "Chargée de Communication Junior | Stratégie Digitale & Corporate",
+    "email": "mouniratouguira2000@gmail.com",
+    "location": "Ile de France (Mobilité Nationale)",
+    "bio": "Passionnée par la communication numérique et la production médiatique, je m'investis dans la création de contenus impactants et l'analyse des stratégies de communication modernes.",
+    "avatarUrl": "https://i.imgur.com/mpx9dyL.jpeg",
+    "cvUrl": "https://drive.google.com/file/d/1BGbLDSfL2dfmWr5vudvJrhQ4O5VTeO8g/view?usp=drivesdk"
+  },
+  "socials": {
+    "linkedin": "https://www.linkedin.com/in/mouniratou-guira-634356311",
+    "instagram": "https://www.instagram.com/mounira9431",
+    "tiktok": "https://tiktok.com/@mouniratou_guira"
+  },
+  "sections": {
+    "hero": {
+      "tagline": "Chargée de Communication Junior",
+      "mainTitle": "Mouniratou GUIRA"
+    },
+    "projects": {
+      "title": "Mes Projets",
+      "description": "Découvrez mes travaux en production médiatique, communication digitale et analyse stratégique.",
+      "heroImageUrl": "https://i.imgur.com/raF1rP7.jpeg"
+    }
+  }
+}

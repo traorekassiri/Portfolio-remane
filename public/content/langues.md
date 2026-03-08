@@ -1,0 +1,2 @@
+- **Français** : Langue maternelle  
+- **Anglais** : Niveau B1  
