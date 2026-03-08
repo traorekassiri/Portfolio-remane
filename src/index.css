@@ -101,8 +101,22 @@
 .pdf-export-mode .shadow-lg, 
 .pdf-export-mode .shadow-xl { box-shadow: none !important; border: 1px solid #f3f4f6 !important; }
 
-.pdf-export-mode .no-print {
+.pdf-export-mode .no-print,
+.pdf-export-mode .no-pdf {
   display: none !important;
+}
+
+.pdf-only {
+  display: none;
+}
+
+.pdf-export-mode .pdf-only {
+  display: block !important;
+}
+
+.pdf-export-mode section {
+  page-break-inside: avoid !important;
+  break-inside: avoid !important;
 }
 
 .html2pdf__page-break {

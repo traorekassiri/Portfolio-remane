@@ -417,42 +417,74 @@ const Hero = () => {
     
     setIsGenerating(true);
     
-    // 1. Force all animated elements to be visible for capture
-    const body = document.body;
-    body.classList.add('pdf-export-mode');
-    
-    // Configuration avancée pour un rendu multi-pages propre
-    const opt = {
-      margin:       [0.4, 0.4] as [number, number],
-      filename:     'Mouniratou_GUIRA_Portfolio.pdf',
-      image:        { type: 'jpeg' as const, quality: 0.98 },
-      html2canvas:  { 
-        scale: 2, 
-        useCORS: true, 
-        letterRendering: true,
-        scrollY: 0,
-        windowWidth: document.documentElement.offsetWidth,
-        logging: false,
-        onclone: (clonedDoc: Document) => {
-          // Supprimer les références aux couleurs oklch qui font planter html2canvas
-          const elements = clonedDoc.getElementsByTagName('*');
-          for (let i = 0; i < elements.length; i++) {
-            const el = elements[i] as HTMLElement;
-            const style = window.getComputedStyle(el);
-            // Si une couleur contient oklch, on la remplace par une valeur sûre
-            if (style.color.includes('oklch')) el.style.color = '#111827';
-            if (style.backgroundColor.includes('oklch')) el.style.backgroundColor = 'transparent';
-            if (style.borderColor.includes('oklch')) el.style.borderColor = '#e5e7eb';
-          }
-        }
-      },
-      jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' as const },
-      pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
-    };
-    
     try {
-      // Attendre un court instant pour que les styles s'appliquent
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // 1. Attendre que toutes les images soient chargées
+      const images = Array.from(element.getElementsByTagName('img'));
+      await Promise.all(images.map(img => {
+        if (img.complete) return Promise.resolve();
+        return new Promise(resolve => {
+          img.onload = resolve;
+          img.onerror = resolve;
+        });
+      }));
+      
+      // 2. Mode export PDF
+      document.body.classList.add('pdf-export-mode');
+      
+      // 3. Forcer un scroll en haut pour capturer tout le contenu
+      window.scrollTo(0, 0);
+      
+      const opt = {
+        margin:       [10, 10, 10, 10] as [number, number, number, number],
+        filename:     'Mouniratou_GUIRA_Portfolio.pdf',
+        image:        { type: 'jpeg' as const, quality: 0.98 },
+        html2canvas:  { 
+          scale: 2, 
+          useCORS: true, 
+          logging: false,
+          letterRendering: true,
+          allowTaint: true,
+          scrollY: 0,
+          onclone: (clonedDoc: Document) => {
+            // Forcer l'affichage des sections PDF-only
+            const pdfOnly = clonedDoc.querySelectorAll('.pdf-only');
+            pdfOnly.forEach(el => {
+              (el as HTMLElement).style.display = 'block';
+              (el as HTMLElement).style.visibility = 'visible';
+              (el as HTMLElement).style.opacity = '1';
+            });
+
+            // Supprimer les éléments indésirables (nav, boutons, etc.)
+            const toRemove = clonedDoc.querySelectorAll('nav, button, .no-pdf, .no-print');
+            toRemove.forEach(el => el.remove());
+
+            // Correction des couleurs oklch pour html2canvas
+            const all = clonedDoc.getElementsByTagName('*');
+            for (let i = 0; i < all.length; i++) {
+              const el = all[i] as HTMLElement;
+              const style = window.getComputedStyle(el);
+              
+              if (style.color.includes('oklch')) el.style.color = '#111827';
+              if (style.backgroundColor.includes('oklch')) {
+                if (el.classList.contains('bg-turquoise')) el.style.backgroundColor = '#40E0D0';
+                else if (el.classList.contains('bg-turquoise/10')) el.style.backgroundColor = 'rgba(64, 224, 208, 0.1)';
+                else el.style.backgroundColor = 'transparent';
+              }
+              if (style.borderColor.includes('oklch')) el.style.borderColor = '#e5e7eb';
+              
+              // Désactiver les animations
+              el.style.transform = 'none';
+              el.style.transition = 'none';
+              el.style.opacity = '1';
+            }
+          }
+        },
+        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' as const },
+        pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
+      };
+      
+      // Attendre un peu pour que le DOM se stabilise avec les classes PDF
+      await new Promise(resolve => setTimeout(resolve, 800));
       
       await html2pdf().from(element).set(opt).save();
     } catch (error) {
@@ -460,7 +492,7 @@ const Hero = () => {
       alert("La génération directe a échoué. Utilisation de l'impression système.");
       window.print();
     } finally {
-      body.classList.remove('pdf-export-mode');
+      document.body.classList.remove('pdf-export-mode');
       setIsGenerating(false);
     }
   };
@@ -1207,6 +1239,28 @@ const HomePage = () => {
     <div id="portfolio-content" className="bg-white">
       <Hero />
       <MarkdownSection id="profil" title="Profil Professionnel" file="profil.md" icon={User} />
+      
+      {/* Section Compétences - Visible dans le PDF */}
+      <div className="pdf-only">
+        <div className="html2pdf__page-break" />
+        <MarkdownSection 
+          id="competences-pdf" 
+          title="Compétences" 
+          file="competences.md" 
+          icon={Code}
+          components={{
+            h3: ({ children }: any) => (
+              <h3 className="text-2xl font-bold text-gray-900 mt-16 mb-8 flex items-center space-x-4">
+                <span className="w-8 h-1 bg-turquoise rounded-full" />
+                <span>{children}</span>
+              </h3>
+            ),
+            ul: SkillList,
+            li: SkillItem
+          }}
+        />
+      </div>
+
       <MarkdownSection 
         id="experiences" 
         title="Expériences" 
@@ -1229,6 +1283,36 @@ const HomePage = () => {
         }}
       />
       <CertificatesSection />
+      
+      {/* Section Projets - Visible dans le PDF */}
+      <div className="pdf-only">
+        <div className="html2pdf__page-break" />
+        <section id="projets-pdf" className="section-container">
+          <div className="flex items-center space-x-4 mb-12">
+            <div className="w-12 h-12 rounded-xl bg-turquoise/10 flex items-center justify-center text-turquoise">
+              <Globe size={24} />
+            </div>
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900">Mes Projets</h2>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[
+              { name: 'Mes Réalisations', icon: ClipboardList },
+              { name: 'Appel à projets (PCTL)', icon: FileText },
+              { name: 'Plaquette JCBM 2024', icon: Palette },
+              { name: 'Galerie Photos', icon: ImageIcon },
+            ].map((item) => (
+              <div 
+                key={item.name}
+                className="flex flex-col items-center p-6 rounded-2xl bg-gray-50 border border-gray-100"
+              >
+                <item.icon size={24} className="mb-3 text-turquoise" />
+                <span className="text-sm font-bold text-center">{item.name}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+      </div>
+
       <Testimonials />
       <BlogSection />
       <section id="contact" className="section-container">
